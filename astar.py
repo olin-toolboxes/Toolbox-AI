@@ -73,9 +73,14 @@ class GridWorld():
 
     def _add_swamp(self, mouse_pos):
         """ Adds a swamp tile in the cell that mouse_pos indicates """
-        # insert swamp code here.
-        pass
-
+        swamp_coord = (mouse_pos[0]//50, mouse_pos[1]//50)
+        if self._is_occupied(swamp_coord):
+            if self.actors[swamp_coord].removable:
+                self.actors.pop(swamp_coord, None)
+        elif swamp_coord != self.cake.cell_coordinates:
+            swamp = ObstacleTile(swamp_coord, self, './images/swamp.jpg',
+                                is_unpassable=False, terrain_cost=8)
+            self.actors[swamp_coord] = swamp
     def _add_lava(self, mouse_pos):
         """ Adds a lava tile in the cell that mouse_pos indicates """
         lava_coord = (mouse_pos[0]//50, mouse_pos[1]//50)
@@ -108,14 +113,16 @@ class GridWorld():
                 elif event.type is pygame.MOUSEBUTTONDOWN:
                     if self.add_tile_type == 'lava':
                         self._add_lava(event.pos)
-                    # insert swamp code here
+                    elif self.add_tile_type == 'swamp':
+                        self._add_swamp(event.pos)
                 elif event.type is pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         self.paul.run_astar(self.cake.cell_coordinates, self)
                         self.paul.get_path()
                     elif event.key == pygame.K_l:
                         self.add_tile_type = 'lava'
-                    # insert swamp code here
+                    elif event.key == pygame.K_s:
+                        self.add_tile_type = 'swamp'
 
 
 class Actor(object):
