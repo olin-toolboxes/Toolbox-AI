@@ -3,10 +3,11 @@ import pygame
 
 
 class GridWorld():
-    """ Grid world that contains Pauls (and other things) living in cells. """
+    """Grid world that contains Pauls (and other things) living in cells."""
+
     def __init__(self, width=10, height=10, cell_size=50):
         pygame.init()
-        screen_size = (height*cell_size, width*cell_size)
+        screen_size = (height * cell_size, width * cell_size)
         self.screen = pygame.display.set_mode(screen_size)
         pygame.display.set_caption = ('Paul World')
         self.actors = {}
@@ -26,12 +27,11 @@ class GridWorld():
         cell_size = (self.cell_size, self.cell_size)
         for i in range(self.height):
             for j in range(self.width):
-                cell_coord = (i*self.cell_size, j*self.cell_size)
+                cell_coord = (i * self.cell_size, j * self.cell_size)
                 self.cells[(i, j)] = Cell(self.screen, cell_coord, cell_size)
 
     def _add_coords(self, a, b):
-        """ Returns a third coord that is equivalent to
-            (a[0]+b[0], a[1]+b[1]) """
+        """Return a third coord that is equivalent to (a[0]+b[0], a[1]+b[1])."""
         return tuple(map(sum, zip(a, b)))
 
     def _init_paul_and_cake(self):
@@ -58,10 +58,9 @@ class GridWorld():
         pygame.display.update()
 
     def _is_in_grid(self, cell_coord):
-        """ tells us whether cell_coord is valid and in range of the actual
-            grid dimensions """
-        valid_x = (-1 < cell_coord[0] < self.width)
-        valid_y = (-1 < cell_coord[1] < self.height)
+        """Tells whether cell_coord is valid and in range of the actual grid dimensions."""
+        valid_x = 0 <= cell_coord[0] < self.width
+        valid_y = 0 <= cell_coord[1] < self.height
         return valid_x and valid_y
 
     def _is_occupied(self, cell_coord):
@@ -72,13 +71,13 @@ class GridWorld():
             return False
 
     def _add_swamp(self, mouse_pos):
-        """ Adds a swamp tile in the cell that mouse_pos indicates """
+        """Add a swamp tile in the cell indicated by mouse_pos."""
         # insert swamp code here.
         pass
 
     def _add_lava(self, mouse_pos):
-        """ Adds a lava tile in the cell that mouse_pos indicates """
-        lava_coord = (mouse_pos[0]//50, mouse_pos[1]//50)
+        """Adds a lava tile in the cell indicated by mouse_pos."""
+        lava_coord = (mouse_pos[0] // 50, mouse_pos[1] // 50)
         if self._is_occupied(lava_coord):
             if self.actors[lava_coord].removable:
                 self.actors.pop(lava_coord, None)
@@ -98,9 +97,9 @@ class GridWorld():
             return 0
 
     def main_loop(self):
-        """ Updates graphics and checks for pygame events """
+        """Update graphics and check for pygame events."""
         running = True
-        while (running):
+        while running:
             self._redraw()
             for event in pygame.event.get():
                 if event.type is pygame.QUIT:
@@ -123,7 +122,7 @@ class Actor(object):
                  removable=True, is_obstacle=True):
         self.is_obstacle = is_obstacle
         self.removable = removable
-        """ takes coordinates as a tuple """
+        # takes coordinates as a tuple
         if world._is_occupied(cell_coordinates):
             raise Exception('%s is already occupied!' % cell_coordinates)
         self.cell_coordinates = cell_coordinates
@@ -134,7 +133,7 @@ class Actor(object):
     def draw(self):
         cells = self.world.cells
         cell = cells[self.cell_coordinates]
-        # add an offset so that the image will fit inside the cell border.
+        # add an offset so that the image will fit inside the cell border
         x_y_coords = self.world._add_coords(cell.coordinates, (3, 3))
         rect_dim = (self.image_rect.width, self.image_rect.height)
         self.image_rect = pygame.Rect(x_y_coords, rect_dim)
@@ -145,9 +144,9 @@ class Actor(object):
 class ObstacleTile(Actor):
     def __init__(self, cell_coordinates, world, image_loc,
                  terrain_cost=0, is_unpassable=True):
-        super(ObstacleTile, self) \
-            .__init__(cell_coordinates, world, image_loc, removable=True,
-                      is_obstacle=is_unpassable)
+        super(ObstacleTile, self).__init__(
+            cell_coordinates, world, image_loc, removable=True,
+            is_obstacle=is_unpassable)
         self.terrain_cost = terrain_cost
 
 
@@ -175,26 +174,26 @@ class Cell():
         rect = pygame.Rect(self.coordinates, self.dimensions)
         pygame.draw.rect(self.draw_screen, self.color, rect, line_width)
         font = pygame.font.Font(None, 20)
-        text = font.render(' '+str(COST_TO_DRAW), 1, (10, 10, 10))
+        text = font.render(' ' + str(COST_TO_DRAW), 1, (10, 10, 10))
         self.draw_screen.blit(text, self.coordinates)
 
 
 class Paul(Actor):
     def __init__(self, init_coordinates, world, image_loc):
-        super(Paul, self) \
-            .__init__(init_coordinates, world, image_loc, removable=False)
+        super(Paul, self).__init__(
+            init_coordinates, world, image_loc, removable=False)
         self.cells = world.cells
         self.open_list = []
         self.closed_list = []
 
     def get_h_cost(self, coord_a, coord_b):
-        """ returns the h score, the manhattan distance between coord_a and
-            the coord_b. """
+        """Return the h score, the Manhattan distance between coord_a and
+        the coord_b."""
         return abs(coord_a[0] - coord_b[0]) + abs(coord_a[1] - coord_b[1])
 
     def get_open_adj_coords(self, coords):
-        """ returns list of valid coords that are adjacent to the argument,
-            open, and not in the closed list. """
+        """Returns a list of valid coords that are adjacent to the argument,
+        open, and not in the closed list."""
         # modify directions and costs as needed
         directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         all_adj = [self.world._add_coords(coords, d) for d in directions]
@@ -202,15 +201,19 @@ class Paul(Actor):
         costs = []
         open_adj = []
         for i, coord in enumerate(all_adj):
-            if(in_bounds[i]):
+            if in_bounds[i]:
                 costs.append(1 + self.world.get_terrain_cost(coord))
                 open_adj.append(coord)
         return open_adj, costs
 
     def is_valid(self, coord):
-        return self.world._is_in_grid(coord) \
-            and not self.world._is_occupied(coord) \
-            and coord not in self.closed_list
+        # The parentheses here are not necessary for return, but because
+        # the expression that computes the return value is more than one
+        # line long. They tell Python that this is a multi-line expression.
+        # This could also be written with \ at the end of each line.
+        return (self.world._is_in_grid(coord)
+                and not self.world._is_occupied(coord)
+                and coord not in self.closed_list)
 
     def get_lowest_cost_open_coord(self):
         open_cells = self.open_list
@@ -220,21 +223,28 @@ class Paul(Actor):
     def reset_cell_values(self):
         self.destination_coord = None
         for cell in self.cells.values():
-            cell.color = (0, 0, 0)
+            cell.color = (0, 0, 0)  # better would be to define a global BLACK
             cell.parents_coords = None
             cell.g_cost = None
             cell.h_cost = None
 
     def get_path(self):
-        """ Follows cell parents backwards until the initial cell is reached to
-            create a path, which is the list of coordinates that paul will
-            travel through to reach the destination. """
+        """Follow cell parents backwards until the initial cell is reached to
+        create a path, which is the list of coordinates that paul will
+        travel through to reach the destination."""
         coord_list = [self.destination_coord]
         print("final cost is {}".format(self.cells[coord_list[-1]].f_cost))
         while self.start_coord not in coord_list:
             try:
                 coord_list.append(self.cells[coord_list[-1]].parents_coords)
             except:
+                # This is poor practice:
+                # * A naked except should never be used. Catch a specific
+                #   exception.
+                # * get_path is both fruitful, and has an effect. When no path
+                #   can be found, it should return None or raise an exception.
+                #   A caller that already performs output should be responsible
+                #   for printing the warning.
                 print('No path found to destination coord!')
                 break
         for coord in coord_list:
@@ -243,8 +253,8 @@ class Paul(Actor):
         return coord_list
 
     def run_astar(self, destination_coord, world):
-        """ Updates cells g,h,f, and parent coordinates until the destination
-            square is found. """
+        """Update cells g, h, f, and parent coordinates until the destination
+        square is found."""
         self.reset_cell_values()
         self.open_list = []
         self.closed_list = []
@@ -255,6 +265,8 @@ class Paul(Actor):
         cell_s.g_cost = 0
         cell_s.h_cost = self.get_h_cost(coord_s, destination_coord)
         self.open_list = [coord_s]
+        # Empty lists are false-y. The following line could instead be
+        #   while self.open_list:
         while len(self.open_list) > 0:
             coord_s = self.get_lowest_cost_open_coord()
             cell_s = self.cells[coord_s]
@@ -280,5 +292,5 @@ class Paul(Actor):
 
 
 if __name__ == "__main__":
-    g = GridWorld()
-    g.main_loop()
+    world = GridWorld()
+    world.main_loop()
